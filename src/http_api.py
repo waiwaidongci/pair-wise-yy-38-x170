@@ -98,6 +98,15 @@ def make_handler(service: Service, static_dir: str):
                     actor, role = self._identity()
                     del actor
                     self._json(200, {"events": service.audit(role)})
+                elif path == "/api/batches":
+                    actor, role = self._identity()
+                    del actor
+                    self._json(200, {"batches": service.list_batches(role)})
+                elif path.startswith("/api/batches/"):
+                    batch_id = int(path.rsplit("/", 1)[-1])
+                    actor, role = self._identity()
+                    del actor
+                    self._json(200, service.get_batch(batch_id, role))
                 else:
                     self._json(404, {"error": "not_found"})
             except Exception as exc:
@@ -119,6 +128,17 @@ def make_handler(service: Service, static_dir: str):
                     expected = body.get("expected_version")
                     self._json(200, service.transition(
                         item_id, target, expected, actor, role))
+                elif path == "/api/batches":
+                    self._json(201, service.create_batch(body, actor, role))
+                elif path.startswith("/api/batches/") and path.endswith("/confirm"):
+                    batch_id = int(path.split("/")[3])
+                    resume = bool(body.get("resume", False))
+                    self._json(200, service.confirm_batch(
+                        batch_id, actor, role, resume=resume))
+                elif path.startswith("/api/batches/") and path.endswith("/resume"):
+                    batch_id = int(path.split("/")[3])
+                    self._json(200, service.confirm_batch(
+                        batch_id, actor, role, resume=True))
                 else:
                     self._json(404, {"error": "not_found"})
             except Exception as exc:

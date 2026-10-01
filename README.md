@@ -31,8 +31,21 @@ python3 app.py --db ./data.db --port 8315
 - `POST /api/items/{id}/records`
 - `POST /api/items/{id}/transition`，必须提交`expected_version`
 - `GET /api/audit`
+- `GET /api/batches`
+- `POST /api/batches`，提交`batch_no`、`item_ids`和`target`（默认`authorized`）
+- `GET /api/batches/{id}`
+- `POST /api/batches/{id}/confirm`，总工确认；被并发修改的指令留在批次等待，其余照常完成
+- `POST /api/batches/{id}/resume`，继续确认待处理指令（重新冻结当前版本与未关闭记录后授权）
 
 允许角色：duty_officer, chief_engineer, dispatcher, viewer。库位超过汛限或入库流量上升时提升紧迫度；授权前必须有复核记录，执行后仍要闭环现场反馈。
+
+## 授权批次
+
+汛期值班员连续建多条调度指令，总工程师逐条授权。批次在创建时冻结每条指令的当前版本和未关闭操作记录；总工确认时若值班员同时提交了操作记录（指令被并发修改），受影响指令留在批次里等待处理，其余照常完成。
+
+- 写入失败后按`batch_no`重试，只能复用首次结果，重放不会多出审计记录。
+- 批次、调度指令、操作记录和审计记录都对应同一份快照；服务重启后未完成项仍可继续确认（`/resume`）。
+- 审计记录通过`batch_id`关联到批次，可在`GET /api/audit`中查看。
 
 ## 测试
 
