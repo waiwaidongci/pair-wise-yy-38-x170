@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
+from typing import Optional
 
 
 def utc_now() -> str:
@@ -15,7 +16,8 @@ def calculate_hash(previous_hash: str, payload: dict) -> str:
 
 
 def make_entry(action: str, entity_type: str, entity_id: int, actor: str,
-               detail: dict, previous_hash: str) -> dict:
+               detail: dict, previous_hash: str,
+               snapshot_id: Optional[str] = None) -> dict:
     payload = {
         "action": action,
         "entity_type": entity_type,
@@ -24,5 +26,8 @@ def make_entry(action: str, entity_type: str, entity_id: int, actor: str,
         "detail": detail,
         "created_at": utc_now(),
     }
-    return dict(payload, previous_hash=previous_hash,
-                entry_hash=calculate_hash(previous_hash, payload))
+    entry = dict(payload, previous_hash=previous_hash,
+                 entry_hash=calculate_hash(previous_hash, payload))
+    if snapshot_id is not None:
+        entry["snapshot_id"] = snapshot_id
+    return entry

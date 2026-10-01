@@ -1,8 +1,9 @@
 from __future__ import annotations
 from .domain import ConflictError, ValidationError
-TITLE='水库防汛调度与操作确认'; ENTITY='调度指令'; ID_PREFIX='RF'
+TITLE='水库防汛调度与操作确认'; ENTITY='调度指令'; BATCH_ENTITY='授权批次'; ID_PREFIX='RF'
 SEVERITIES=['routine', 'attention', 'urgent', 'emergency']; STATES=['draft', 'checked', 'authorized', 'executed', 'closed']; TRANSITIONS={'draft': ['checked'], 'checked': ['authorized'], 'authorized': ['executed'], 'executed': ['closed'], 'closed': []}; TRANSITION_ROLES={'checked': ['duty_officer'], 'authorized': ['chief_engineer'], 'executed': ['dispatcher'], 'closed': ['chief_engineer']}
 CREATE_ROLES=set(['duty_officer']); RECORD_ROLES=set(['duty_officer', 'dispatcher']); AUDIT_ROLES=set(['chief_engineer', 'viewer']); VIEW_ROLES=set(['duty_officer', 'chief_engineer', 'dispatcher', 'viewer'])
+BATCH_ROLES=set(['chief_engineer']); BATCH_STATUSES=['open', 'completed']; BATCH_ITEM_STATUSES=['pending', 'affected', 'authorized']; BATCH_TARGET=STATES[2]; BATCH_REQUIRED_STATUS=STATES[1]; MAX_BATCH_ITEMS=500
 SEVERITY_WEIGHT={'routine': 1.0, 'attention': 3.0, 'urgent': 6.0, 'emergency': 9.0}; DEADLINE_HOURS={'routine': 72, 'attention': 24, 'urgent': 8, 'emergency': 4}; TERMINAL_STATES=set(['closed'])
 def priority_score(severity,quantity=0.0,threshold=1.0,open_records=0):
     if severity not in SEVERITY_WEIGHT: raise ValidationError("unknown severity")
